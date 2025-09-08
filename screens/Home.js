@@ -6,6 +6,7 @@ import * as SQLite from "expo-sqlite";
 import styles from "../styles";
 import {LinearGradient} from "expo-linear-gradient";
 import Ionicons from "@expo/vector-icons/Ionicons";
+import activitiesMock from "../data/activitiesMock";
 
 import {
     Roboto_400Regular,
@@ -54,8 +55,8 @@ function distributeIntoRows(items, rows = 3) {
     return result;
 }
 
-const accessToken = "3UTbm7q1Civ1AuDfL2D7DaLGsziz";
-const apiKey = "68b19790c8a2a153771537jswbf34d";
+const accessToken = "";
+const apiKey = "";
 
 export default function Home({navigation}) {
     const rowsData = distributeIntoRows(popularTags, rows);
@@ -150,10 +151,10 @@ export default function Home({navigation}) {
     //     }
     // };
 
-    const getLatLngFromAddress = async (inputAddress) => {
+    const getLatLngFromAddress = async (inputAddressToGetLatLng) => {
         const res = await fetch(
             `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(
-                inputAddress
+                inputAddressToGetLatLng
             )}&key=${apiKey}`
         );
         if (!res.ok) throw new Error(`HTTP ${res.status} ${res.statusText}`);
@@ -166,29 +167,48 @@ export default function Home({navigation}) {
         return returnData;
     };
 
-    const handleSearch = async () => {
+    // const handleSearch = async (inputAddressToGetResults) => {
+    //     try {
+    //         setLoading(true);
+    //         // const {latitude, longitude} = await getLatLngFromAddress(inputAddressToGetResults);
+    //         const {latitude, longitude} = {latitude: 60.200692, longitude: 24.934302};
+    //         const res = await fetch(
+    //             `https://test.api.amadeus.com/v1/shopping/activities?latitude=${latitude}&longitude=${longitude}&radius=1`,
+    //             {
+    //                 method: "GET",
+    //                 headers: {
+    //                     Authorization: `Bearer ${accessToken}`,
+    //                     Accept: "application/json",
+    //                 },
+    //             }
+    //         );
+    //         if (!res.ok) throw new Error(`HTTP ${res.status} ${res.statusText}`);
+    //         const data = await res.json();
+    //         setResults(data.data);
+    //         setTheme({
+    //             backgroundColors: ["#EFF2FF", "#EFF2FF"],
+    //             tagBackgroundColor: "#E4E7FF",
+    //             fontColor: "#2A2929",
+    //         });
+    //         setLoading(false);
+    //     } catch (err) {
+    //         console.error("Fetch error:", err);
+    //     }
+    // };
+
+    const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+    const handleSearch = async (inputAddressToGetResults) => {
         try {
             setLoading(true);
-            const {latitude, longitude} = await getLatLngFromAddress(address);
-            const res = await fetch(
-                `https://test.api.amadeus.com/v1/shopping/activities?latitude=${latitude}&longitude=${longitude}&radius=1`,
-                {
-                    method: "GET",
-                    headers: {
-                        Authorization: `Bearer ${accessToken}`,
-                        Accept: "application/json",
-                    },
-                }
-            );
-            if (!res.ok) throw new Error(`HTTP ${res.status} ${res.statusText}`);
-            const data = await res.json();
-            setResults(data.data);
-            setLoading(false);
+            // const {latitude, longitude} = await getLatLngFromAddress(inputAddressToGetResults);
+            await delay(1000);
+            setResults(activitiesMock.data);
             setTheme({
                 backgroundColors: ["#EFF2FF", "#EFF2FF"],
                 tagBackgroundColor: "#E4E7FF",
                 fontColor: "#2A2929",
             });
+            setLoading(false);
         } catch (err) {
             console.error("Fetch error:", err);
         }
@@ -201,6 +221,8 @@ export default function Home({navigation}) {
             fontColor: "#fff",
         });
         setResults(null);
+        setAddress("");
+        setChosenTag("");
     };
 
     return (
@@ -251,7 +273,7 @@ export default function Home({navigation}) {
                             onChangeText={(text) => setAddress(text)}
                         />
                         <Pressable
-                            onPress={handleSearch}
+                            onPress={() => handleSearch(address)}
                             style={{
                                 backgroundColor: "#fff",
                                 borderRadius: 10,
@@ -287,7 +309,10 @@ export default function Home({navigation}) {
                                             {rowItems.map((tag, i) => (
                                                 <Pressable
                                                     key={`${rowIndex}-${i}`}
-                                                    onPress={handleSearch}
+                                                    onPress={() => {
+                                                        handleSearch(tag);
+                                                        setChosenTag(tag);
+                                                    }}
                                                     style={[
                                                         {
                                                             backgroundColor: theme.tagBackgroundColor,
@@ -411,19 +436,26 @@ export default function Home({navigation}) {
                                                     }}
                                                 />
                                             </View>
-                                            <Text
+                                            <View
                                                 style={{
-                                                    width: 200,
+                                                    marginTop: 5,
+                                                    flexDirection: "row",
+                                                    alignItems: "center",
                                                     height: 55,
-                                                    marginTop: 10,
-                                                    fontFamily: "Roboto_500Medium",
-                                                    fontSize: 14,
-                                                    textAlign: "center",
-                                                    color: "#000",
                                                 }}
                                             >
-                                                {result.name}
-                                            </Text>
+                                                <Text
+                                                    style={{
+                                                        width: 200,
+                                                        fontFamily: "Roboto_500Medium",
+                                                        fontSize: 14,
+                                                        textAlign: "center",
+                                                        color: "#000",
+                                                    }}
+                                                >
+                                                    {result.name}
+                                                </Text>
+                                            </View>
                                             <Pressable
                                                 onPress={() =>
                                                     navigation.navigate("Activity", {address: result.address})
@@ -433,7 +465,7 @@ export default function Home({navigation}) {
                                                     height: 40,
                                                     backgroundColor: "#8497FE",
                                                     borderRadius: 6,
-                                                    marginTop: 10,
+                                                    marginTop: 5,
                                                     paddingHorizontal: 18,
                                                     paddingVertical: 10,
                                                 }}
