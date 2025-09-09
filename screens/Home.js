@@ -1,5 +1,15 @@
 import {useState, useEffect, use} from "react";
-import {View, Text, Image, TextInput, Pressable, Dimensions, ScrollView, ActivityIndicator} from "react-native";
+import {
+    View,
+    Text,
+    Image,
+    TextInput,
+    Pressable,
+    Dimensions,
+    ScrollView,
+    ActivityIndicator,
+    FlatList,
+} from "react-native";
 import {Input, Button} from "@rneui/themed";
 import {SafeAreaProvider, SafeAreaView} from "react-native-safe-area-context";
 import * as SQLite from "expo-sqlite";
@@ -46,6 +56,7 @@ const popularTags = [
 ];
 const rows = 3;
 const {width: SCREEN_WIDTH} = Dimensions.get("window");
+const {height: SCREEN_HEIGHT} = Dimensions.get("window");
 
 function distributeIntoRows(items, rows = 3) {
     const result = Array.from({length: rows}, () => []);
@@ -59,12 +70,17 @@ const accessToken = "";
 const apiKey = "";
 
 export default function Home({navigation}) {
+    const [active, setActive] = useState(false);
+
     const rowsData = distributeIntoRows(popularTags, rows);
+
+    const [tags, setTags] = useState(popularTags);
     const [chosenTag, setChosenTag] = useState("Paris");
 
     const [loading, setLoading] = useState(false);
 
     const [address, setAddress] = useState("");
+    const [searchedAddress, setSearchedAddress] = useState("");
 
     const [theme, setTheme] = useState({
         tagBackgroundColor: "rgba(255, 255, 255, 0.8)",
@@ -170,6 +186,7 @@ export default function Home({navigation}) {
     // const handleSearch = async (inputAddressToGetResults) => {
     //     try {
     //         setLoading(true);
+    //         setAddress(inputAddressToGetResults);
     //         // const {latitude, longitude} = await getLatLngFromAddress(inputAddressToGetResults);
     //         const {latitude, longitude} = {latitude: 60.200692, longitude: 24.934302};
     //         const res = await fetch(
@@ -200,6 +217,7 @@ export default function Home({navigation}) {
     const handleSearch = async (inputAddressToGetResults) => {
         try {
             setLoading(true);
+            setSearchedAddress(inputAddressToGetResults);
             // const {latitude, longitude} = await getLatLngFromAddress(inputAddressToGetResults);
             await delay(1000);
             setResults(activitiesMock.data);
@@ -222,6 +240,8 @@ export default function Home({navigation}) {
         });
         setResults(null);
         setAddress("");
+        setSearchedAddress("");
+        setTags(popularTags);
         setChosenTag("");
     };
 
@@ -233,6 +253,91 @@ export default function Home({navigation}) {
                     colors={theme.backgroundColors}
                     style={styles.background}
                 />
+                <Pressable
+                    style={{
+                        display: active ? "flex" : "none",
+                        position: "absolute",
+                        inset: 0,
+                        zIndex: 98,
+                        backgroundColor: "rgba(0, 0, 0, 0.3)",
+                    }}
+                    onPress={() => setActive(false)}
+                ></Pressable>
+
+                <View
+                    style={{
+                        position: "absolute",
+                        top: 100,
+                        right: 30,
+                        zIndex: 99,
+                        display: active ? "flex" : "none",
+                        backgroundColor: "white",
+                        width: SCREEN_WIDTH - 60,
+                        maxHeight: SCREEN_HEIGHT / 1.5,
+                        padding: 20,
+                        borderRadius: 20,
+                    }}
+                >
+                    <Text
+                        style={{
+                            fontFamily: "Roboto_700Bold",
+                            fontSize: 18,
+                            color: "#000",
+                            marginBottom: 10,
+                            backgroundColor: "#EFF2FF",
+                            padding: 10,
+                            borderRadius: 10,
+                            boxShadow: "rgba(0, 0, 0, 0.1) 0px 4px 6px -1px, rgba(0, 0, 0, 0.06) 0px 2px 4px -1px",
+                        }}
+                    >
+                        ❤️ SAVED ACTIVITIES
+                    </Text>
+                    <ScrollView contentContainerStyle={{flexDirection: "column"}}>
+                        {activitiesMock.data.map((item) => (
+                            <Pressable
+                                key={item.id}
+                                style={{
+                                    flexDirection: "row",
+                                    justifyContent: "space-between",
+                                    alignItems: "center",
+                                    borderBottomWidth: 1,
+                                    borderBottomColor: "rgba(0, 0, 0, 0.1)",
+                                }}
+                                onPress={() => console.log(item.name)}
+                            >
+                                <View style={{paddingTop: 10, paddingBottom: 8}}>
+                                    <Text
+                                        style={{
+                                            fontFamily: "Roboto_700Bold",
+                                            fontSize: 18,
+                                            color: "#000",
+                                        }}
+                                    >
+                                        {item.location}
+                                    </Text>
+                                    <Text
+                                        style={{
+                                            marginTop: 2,
+                                            fontFamily: "Roboto_400Regular",
+                                            fontSize: 14,
+                                            color: "#000",
+                                        }}
+                                    >
+                                        {item.name}
+                                    </Text>
+                                </View>
+                                <Pressable onPress={() => console.log(item.name)}>
+                                    <Ionicons
+                                        name="trash"
+                                        size={24}
+                                        color="red"
+                                        style={{paddingVertical: 10, paddingLeft: 10}}
+                                    />
+                                </Pressable>
+                            </Pressable>
+                        ))}
+                    </ScrollView>
+                </View>
                 <ScrollView overScrollMode="never" bounces={false} style={styles.container}>
                     <View style={{flexDirection: "row", justifyContent: "space-between", width: "100%"}}>
                         <Pressable onPress={handleHome}>
@@ -243,7 +348,7 @@ export default function Home({navigation}) {
                                 style={{paddingVertical: 10, paddingRight: 10}}
                             />
                         </Pressable>
-                        <Pressable onPress={handleHome}>
+                        <Pressable style={{position: "relative", zIndex: 99}} onPress={() => setActive(!active)}>
                             <Ionicons
                                 name="heart"
                                 size={24}
@@ -312,6 +417,7 @@ export default function Home({navigation}) {
                                                     onPress={() => {
                                                         handleSearch(tag);
                                                         setChosenTag(tag);
+                                                        setTags([tag, ...tags.filter((tagItem) => tagItem !== tag)]);
                                                     }}
                                                     style={[
                                                         {
@@ -342,10 +448,13 @@ export default function Home({navigation}) {
                         )}
                         {results && (
                             <View style={{flexDirection: "row", alignItems: "center"}}>
-                                {popularTags.map((tag, i) => (
+                                {tags.map((tag, i) => (
                                     <Pressable
                                         key={`${i}`}
-                                        onPress={() => console.log("Tag", tag)}
+                                        onPress={() => {
+                                            handleSearch(tag);
+                                            setChosenTag(tag);
+                                        }}
                                         style={[
                                             {
                                                 backgroundColor:
@@ -458,7 +567,7 @@ export default function Home({navigation}) {
                                             </View>
                                             <Pressable
                                                 onPress={() =>
-                                                    navigation.navigate("Activity", {address: result.address})
+                                                    navigation.navigate("Activity", {geoCode: result.geoCode})
                                                 }
                                                 style={{
                                                     width: "100%",

@@ -8,7 +8,6 @@ export default StyleSheet.create({
         zIndex: -1,
     },
     container: {
-        position: "relative",
         flex: 1,
         flexDirection: "column",
         zIndex: 1,
@@ -17,6 +16,7 @@ export default StyleSheet.create({
     background: {
         position: "absolute",
         inset: 0,
+        zIndex: -2,
     },
     earth: {
         position: "absolute",
@@ -30,7 +30,7 @@ export default StyleSheet.create({
         inset: 0,
         justifyContent: "center",
         alignItems: "center",
-        zIndex: 99,
+        zIndex: 999,
         backgroundColor: "rgba(0, 0, 0, 0.5)",
     }
 });
