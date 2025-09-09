@@ -1,36 +1,14 @@
-import {useState, useEffect, use} from "react";
-import {
-    View,
-    Text,
-    Image,
-    TextInput,
-    Pressable,
-    Dimensions,
-    ScrollView,
-    ActivityIndicator,
-    FlatList,
-} from "react-native";
-import {Input, Button} from "@rneui/themed";
+import {useState, useEffect, use, act} from "react";
+import {View, Text, Image, TextInput, Pressable, Dimensions, ScrollView, ActivityIndicator} from "react-native";
 import {SafeAreaProvider, SafeAreaView} from "react-native-safe-area-context";
-import * as SQLite from "expo-sqlite";
 import styles from "../styles";
 import {LinearGradient} from "expo-linear-gradient";
-import Ionicons from "@expo/vector-icons/Ionicons";
+import Octicons from "@expo/vector-icons/Octicons";
 import activitiesMock from "../data/activitiesMock";
 
-import {
-    Roboto_400Regular,
-    Roboto_500Medium,
-    Roboto_600SemiBold,
-    Roboto_700Bold,
-    useFonts,
-} from "@expo-google-fonts/roboto";
 import earth from "../assets/earth.png";
 import flags from "../assets/flags.png";
 import img_deco from "../assets/img-deco.png";
-
-import * as SplashScreen from "expo-splash-screen";
-SplashScreen.preventAutoHideAsync();
 
 const popularTags = [
     "Paris",
@@ -90,43 +68,12 @@ export default function Home({navigation}) {
 
     const [results, setResults] = useState(null);
 
-    // Load fonts
-    const [loaded, error] = useFonts({
-        Roboto_400Regular,
-        Roboto_500Medium,
-        Roboto_600SemiBold,
-        Roboto_700Bold,
-    });
-
-    // SQLite
-    const [dbReady, setDbReady] = useState(false);
-    const db = SQLite.openDatabaseSync("address.db");
-
-    const initializeDb = async () => {
-        try {
-            await db.execAsync(
-                `CREATE TABLE IF NOT EXISTS address (id INTEGER PRIMARY KEY AUTOINCREMENT, address TEXT);`
-            );
-            setDbReady(true);
-        } catch (error) {
-            console.error("Db init error: ", error);
-        }
-    };
-
-    useEffect(() => {
-        initializeDb();
-    }, []);
-
-    // Hide splash screen when everything is ready
-    useEffect(() => {
-        if ((loaded || error) && dbReady) {
-            SplashScreen.hideAsync();
-        }
-    }, [loaded, error, dbReady, theme, loading, results]);
-
-    if ((!loaded && !error) || !dbReady) {
-        return null; // keep showing the splash screen till font and db is ready
-    }
+    // // Hide splash screen when everything is ready
+    // useEffect(() => {
+    //     if ((loaded || error) && dbReady) {
+    //         SplashScreen.hideAsync();
+    //     }
+    // }, [loaded, error, dbReady, theme, loading, results]);
 
     // const [address, setAddress] = useState("");
     // const [addresses, setAddresses] = useState([]);
@@ -219,7 +166,7 @@ export default function Home({navigation}) {
             setLoading(true);
             setSearchedAddress(inputAddressToGetResults);
             // const {latitude, longitude} = await getLatLngFromAddress(inputAddressToGetResults);
-            await delay(1000);
+            await delay(100);
             setResults(activitiesMock.data);
             setTheme({
                 backgroundColors: ["#EFF2FF", "#EFF2FF"],
@@ -327,7 +274,7 @@ export default function Home({navigation}) {
                                     </Text>
                                 </View>
                                 <Pressable onPress={() => console.log(item.name)}>
-                                    <Ionicons
+                                    <Octicons
                                         name="trash"
                                         size={24}
                                         color="red"
@@ -341,15 +288,15 @@ export default function Home({navigation}) {
                 <ScrollView overScrollMode="never" bounces={false} style={styles.container}>
                     <View style={{flexDirection: "row", justifyContent: "space-between", width: "100%"}}>
                         <Pressable onPress={handleHome}>
-                            <Ionicons
+                            <Octicons
                                 name="home"
                                 size={24}
                                 color={theme.fontColor}
                                 style={{paddingVertical: 10, paddingRight: 10}}
                             />
                         </Pressable>
-                        <Pressable style={{position: "relative", zIndex: 99}} onPress={() => setActive(!active)}>
-                            <Ionicons
+                        <Pressable onPress={() => setActive(!active)}>
+                            <Octicons
                                 name="heart"
                                 size={24}
                                 color={theme.fontColor}
@@ -388,7 +335,7 @@ export default function Home({navigation}) {
                                 paddingHorizontal: 20,
                             }}
                         >
-                            <Ionicons name="search" size={20} color="#CCCBCB" />
+                            <Octicons name="search" size={20} color="#CCCBCB" />
                         </Pressable>
                     </View>
                     <Text style={{fontFamily: "Roboto_500Medium", fontSize: 26, color: theme.fontColor, marginTop: 35}}>
@@ -567,7 +514,7 @@ export default function Home({navigation}) {
                                             </View>
                                             <Pressable
                                                 onPress={() =>
-                                                    navigation.navigate("Activity", {geoCode: result.geoCode})
+                                                    navigation.navigate("Activity", {activity: result})
                                                 }
                                                 style={{
                                                     width: "100%",

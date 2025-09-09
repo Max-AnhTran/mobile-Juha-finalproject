@@ -4,11 +4,9 @@ export default StyleSheet.create({
     safeAreaZone: {
         position: "relative",
         flex: 1,
-        backgroundColor: "#fff",
         zIndex: -1,
     },
     container: {
-        flex: 1,
         flexDirection: "column",
         zIndex: 1,
         paddingHorizontal: 30,
@@ -33,4 +31,5 @@ export default StyleSheet.create({
         zIndex: 999,
         backgroundColor: "rgba(0, 0, 0, 0.5)",
     }
+    
 });
