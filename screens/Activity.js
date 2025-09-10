@@ -1,14 +1,13 @@
-import {StyleSheet, View, Text, Pressable, ScrollView, Dimensions, Image, Linking} from "react-native";
+import {View, Text, Pressable, ScrollView, Dimensions, Image, Linking} from "react-native";
 import {SafeAreaProvider, SafeAreaView} from "react-native-safe-area-context";
-import {Button} from "@rneui/themed";
 import MapView, {Marker} from "react-native-maps";
-import {useState, useRef, useEffect} from "react";
+import {useState, useRef, useEffect, act} from "react";
 import Octicons from "@expo/vector-icons/Octicons";
 import styles from "../styles";
-import img_deco from "../assets/img-deco.png";
 import img_deco2 from "../assets/img-deco2.png";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
-import {ListItem} from "@rneui/base";
+import {saveActivity, deleteActivity, getActivityById} from "../services/dbService";
+import {get} from "react-native/Libraries/TurboModule/TurboModuleRegistry";
 
 const {width: SCREEN_WIDTH, height: SCREEN_HEIGHT} = Dimensions.get("window");
 
@@ -25,36 +24,29 @@ export default function Activity({route, navigation}) {
     };
 
     useEffect(() => {
+        const checkActivity = async () => {
+            const result = await getActivityById(activity.id);
+            if (result.length > 0) {
+                setActive(true);
+            }
+        };
+        checkActivity();
+    }, []);
+
+    useEffect(() => {
         if (zoomOut) {
             scrollToBottom();
         }
     }, [zoomOut]);
 
-    // const handleFetch = () => {
-    //     fetch(`https://geocode.maps.co/search?q=${address}&api_key=${apiKey}`)
-    //         .then((response) => {
-    //             if (!response.ok) throw new Error("Error in fetch:" + response.statusText);
-
-    //             return response.json();
-    //         })
-    //         .then((data) =>
-    //             setRegion(
-    //                 data.length
-    //                     ? {
-    //                           latitude: parseFloat(data[0].lat),
-    //                           longitude: parseFloat(data[0].lon),
-    //                           latitudeDelta: 0.0322,
-    //                           longitudeDelta: 0.0221,
-    //                       }
-    //                     : region
-    //             )
-    //         )
-    //         .catch((err) => console.error(err));
-    // };
-
-    // useEffect(() => {
-    //     handleFetch();
-    // }, [address]);
+    const saveAndDelete = () => {
+        if (active) {
+            deleteActivity(activity.id);
+        } else {
+            saveActivity(activity);
+        }
+        setActive(!active);
+    };
 
     return (
         <SafeAreaProvider>
@@ -69,7 +61,7 @@ export default function Activity({route, navigation}) {
                                 style={{paddingVertical: 10, paddingRight: 10}}
                             />
                         </Pressable>
-                        <Pressable onPress={() => setActive(!active)}>
+                        <Pressable onPress={saveAndDelete}>
                             <Octicons
                                 name={active ? "heart-fill" : "heart"}
                                 size={24}
@@ -194,7 +186,24 @@ export default function Activity({route, navigation}) {
                         </Pressable>
                     </MapView>
 
-                    <View style={{height: 30}}></View>
+                    <Pressable onPress={saveAndDelete}>
+                        <Text
+                            style={{
+                                color: "#fff",
+                                fontSize: 16,
+                                fontFamily: "Roboto_700Bold",
+                                marginTop: 15,
+                                paddingVertical: 20,
+                                backgroundColor: active ? "red" : "#8497FE",
+                                borderRadius: 20,
+                                textAlign: "center",
+                            }}
+                        >
+                            {active ? "Remove from Favorites" : "+ Add to Favorites"}
+                        </Text>
+                    </Pressable>
+
+                    <View style={{height: 10}}></View>
                 </ScrollView>
             </SafeAreaView>
         </SafeAreaProvider>

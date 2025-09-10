@@ -5,6 +5,8 @@ import styles from "../styles";
 import {LinearGradient} from "expo-linear-gradient";
 import Octicons from "@expo/vector-icons/Octicons";
 import activitiesMock from "../data/activitiesMock";
+import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
+import {saveActivity, getAllActivities, deleteActivity} from "../services/dbService";
 
 import earth from "../assets/earth.png";
 import flags from "../assets/flags.png";
@@ -60,6 +62,8 @@ export default function Home({navigation}) {
     const [address, setAddress] = useState("");
     const [searchedAddress, setSearchedAddress] = useState("");
 
+    const [savedActivities, setSavedActivities] = useState([]);
+
     const [theme, setTheme] = useState({
         tagBackgroundColor: "rgba(255, 255, 255, 0.8)",
         backgroundColors: ["#8898FC", "#DBBDE7"],
@@ -68,51 +72,15 @@ export default function Home({navigation}) {
 
     const [results, setResults] = useState(null);
 
-    // // Hide splash screen when everything is ready
-    // useEffect(() => {
-    //     if ((loaded || error) && dbReady) {
-    //         SplashScreen.hideAsync();
-    //     }
-    // }, [loaded, error, dbReady, theme, loading, results]);
-
-    // const [address, setAddress] = useState("");
-    // const [addresses, setAddresses] = useState([]);
-
-    // const [region, setRegion] = useState({
-    //     latitude: 60.200692,
-    //     longitude: 24.934302,
-    //     latitudeDelta: 0.0322,
-    //     longitudeDelta: 0.0221,
-    // });
-
-    // const saveAddress = async () => {
-    //     try {
-    //         if (!address) return;
-    //         await db.runAsync("INSERT INTO address (address) VALUES (?);", address);
-    //         setAddress("");
-    //         await updateList();
-    //     } catch (error) {
-    //         console.error("Could not add item", error);
-    //     }
-    // };
-
-    // const deleteAddress = async (id) => {
-    //     try {
-    //         await db.runAsync("DELETE FROM address WHERE id=?", id);
-    //         await updateList();
-    //     } catch (error) {
-    //         console.error("Could not delete item", error);
-    //     }
-    // };
-
-    // const updateList = async () => {
-    //     try {
-    //         const list = await db.getAllAsync("SELECT * from address;");
-    //         setAddresses(list);
-    //     } catch (error) {
-    //         console.error("Could not get items", error);
-    //     }
-    // };
+    const updateList = async () => {
+        try {
+            const list = await getAllActivities();
+            console.log(list);
+            setSavedActivities(list);
+        } catch (error) {
+            console.error("Could not get items", error);
+        }
+    };
 
     const getLatLngFromAddress = async (inputAddressToGetLatLng) => {
         const res = await fetch(
@@ -240,7 +208,20 @@ export default function Home({navigation}) {
                         ❤️ SAVED ACTIVITIES
                     </Text>
                     <ScrollView contentContainerStyle={{flexDirection: "column"}}>
-                        {activitiesMock.data.map((item) => (
+                        {savedActivities.length === 0 && (
+                            <Text
+                                style={{
+                                    marginTop: 15,
+                                    fontFamily: "Roboto_400Regular_Italic",
+                                    fontSize: 14,
+                                    color: "#000",
+                                    textAlign: "center",
+                                }}
+                            >
+                                No saved activities
+                            </Text>
+                        )}
+                        {savedActivities.map((item) => (
                             <Pressable
                                 key={item.id}
                                 style={{
@@ -273,7 +254,12 @@ export default function Home({navigation}) {
                                         {item.name}
                                     </Text>
                                 </View>
-                                <Pressable onPress={() => console.log(item.name)}>
+                                <Pressable
+                                    onPress={() => {
+                                        deleteActivity(item.id);
+                                        updateList();
+                                    }}
+                                >
                                     <Octicons
                                         name="trash"
                                         size={24}
@@ -286,25 +272,37 @@ export default function Home({navigation}) {
                     </ScrollView>
                 </View>
                 <ScrollView overScrollMode="never" bounces={false} style={styles.container}>
-                    <View style={{flexDirection: "row", justifyContent: "space-between", width: "100%"}}>
+                    <View
+                        style={{
+                            flexDirection: "row",
+                            justifyContent: "space-between",
+                            alignItems: "center",
+                            width: "100%",
+                        }}
+                    >
                         <Pressable onPress={handleHome}>
-                            <Octicons
-                                name="home"
-                                size={24}
+                            <MaterialCommunityIcons
+                                name="home-circle"
+                                size={30}
                                 color={theme.fontColor}
                                 style={{paddingVertical: 10, paddingRight: 10}}
                             />
                         </Pressable>
-                        <Pressable onPress={() => setActive(!active)}>
+                        <Pressable
+                            onPress={() => {
+                                updateList();
+                                setActive(true);
+                            }}
+                        >
                             <Octicons
-                                name="heart"
+                                name="feed-heart"
                                 size={24}
                                 color={theme.fontColor}
                                 style={{paddingVertical: 10, paddingLeft: 10}}
                             />
                         </Pressable>
                     </View>
-                    <Text style={{fontFamily: "Roboto_500Medium", fontSize: 42, color: theme.fontColor, marginTop: 40}}>
+                    <Text style={{fontFamily: "Roboto_500Medium", fontSize: 42, color: theme.fontColor, marginTop: 30}}>
                         Discover Your {"\n"}
                         Next Adventure
                     </Text>
@@ -514,7 +512,9 @@ export default function Home({navigation}) {
                                             </View>
                                             <Pressable
                                                 onPress={() =>
-                                                    navigation.navigate("Activity", {activity: result})
+                                                    navigation.navigate("Activity", {
+                                                        activity: {...result, location: searchedAddress},
+                                                    })
                                                 }
                                                 style={{
                                                     width: "100%",

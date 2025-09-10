@@ -1,17 +1,18 @@
 import {NavigationContainer} from "@react-navigation/native";
 import {createNativeStackNavigator} from "@react-navigation/native-stack";
 import {useEffect, useState} from "react";
-import * as SQLite from "expo-sqlite";
 import {
     Roboto_400Regular,
     Roboto_500Medium,
     Roboto_600SemiBold,
     Roboto_700Bold,
+    Roboto_400Regular_Italic,
     useFonts,
 } from "@expo-google-fonts/roboto";
 
 import Home from "./screens/Home";
 import Activity from "./screens/Activity";
+import {initializeDb} from "./services/dbService";
 import * as SplashScreen from "expo-splash-screen";
 SplashScreen.preventAutoHideAsync();
 
@@ -21,6 +22,7 @@ export default function App() {
     // Load fonts
     const [loaded, error] = useFonts({
         Roboto_400Regular,
+        Roboto_400Regular_Italic,
         Roboto_500Medium,
         Roboto_600SemiBold,
         Roboto_700Bold,
@@ -28,21 +30,11 @@ export default function App() {
 
     // SQLite
     const [dbReady, setDbReady] = useState(false);
-    const db = SQLite.openDatabaseSync("address.db");
-
-    const initializeDb = async () => {
-        try {
-            await db.execAsync(
-                `CREATE TABLE IF NOT EXISTS address (id INTEGER PRIMARY KEY AUTOINCREMENT, address TEXT);`
-            );
-            setDbReady(true);
-        } catch (error) {
-            console.error("Db init error: ", error);
-        }
-    };
 
     useEffect(() => {
-        initializeDb();
+        initializeDb().then((result) => {
+            setDbReady(result);
+        });
     }, []);
 
     useEffect(() => {
