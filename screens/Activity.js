@@ -14,6 +14,7 @@ const {width: SCREEN_WIDTH, height: SCREEN_HEIGHT} = Dimensions.get("window");
 export default function Activity({route, navigation}) {
     // const apiKey = "68b19790c8a2a153771537jswb4f34d";
     const {activity} = route.params; // Get address from route params
+
     const [active, setActive] = useState(false);
     const [zoomOut, setZoomOut] = useState(false);
 

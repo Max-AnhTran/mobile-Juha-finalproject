@@ -72,6 +72,14 @@ export default function Home({navigation}) {
 
     const [results, setResults] = useState(null);
 
+    useEffect(() => {
+        const unsubscribe = navigation.addListener("focus", () => {
+            updateList();
+        });
+
+        return unsubscribe;
+    }, [navigation]);
+
     const updateList = async () => {
         try {
             const list = await getAllActivities();
@@ -231,7 +239,27 @@ export default function Home({navigation}) {
                                     borderBottomWidth: 1,
                                     borderBottomColor: "rgba(0, 0, 0, 0.1)",
                                 }}
-                                onPress={() => console.log(item.name)}
+                                onPress={() =>
+                                    navigation.navigate("Activity", {
+                                        activity: {
+                                            id: item.id,
+                                            name: item.name,
+                                            shortDescription: item.shortDescription,
+                                            geoCode: {
+                                                latitude: item.latitude,
+                                                longitude: item.longitude,
+                                            },
+                                            rating: item.rating,
+                                            pictures: [item.pictureLink],
+                                            bookingLink: item.bookingLink,
+                                            price: {
+                                                currencyCode: "EUR",
+                                                amount: item.price,
+                                            },
+                                            location: item.location,
+                                        },
+                                    })
+                                }
                             >
                                 <View style={{paddingTop: 10, paddingBottom: 8}}>
                                     <Text
