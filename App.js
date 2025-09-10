@@ -1,19 +1,24 @@
+// 1. Library 
+import {useEffect, useState} from "react";
 import {NavigationContainer} from "@react-navigation/native";
 import {createNativeStackNavigator} from "@react-navigation/native-stack";
-import {useEffect, useState} from "react";
+import * as SplashScreen from "expo-splash-screen";
+
+// 2. Font
 import {
+    useFonts,
     Roboto_400Regular,
     Roboto_500Medium,
     Roboto_600SemiBold,
     Roboto_700Bold,
     Roboto_400Regular_Italic,
-    useFonts,
 } from "@expo-google-fonts/roboto";
 
+// 3. Local Files
 import Home from "./screens/Home";
 import Activity from "./screens/Activity";
 import {initializeDb} from "./services/dbService";
-import * as SplashScreen from "expo-splash-screen";
+
 SplashScreen.preventAutoHideAsync();
 
 const Stack = createNativeStackNavigator();

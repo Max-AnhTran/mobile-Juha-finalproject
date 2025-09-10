@@ -1,13 +1,12 @@
 import {View, Text, Pressable, ScrollView, Dimensions, Image, Linking} from "react-native";
 import {SafeAreaProvider, SafeAreaView} from "react-native-safe-area-context";
 import MapView, {Marker} from "react-native-maps";
-import {useState, useRef, useEffect, act} from "react";
+import {useState, useRef, useEffect} from "react";
 import Octicons from "@expo/vector-icons/Octicons";
 import styles from "../styles";
 import img_deco2 from "../assets/img-deco2.png";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import {saveActivity, deleteActivity, getActivityById} from "../services/dbService";
-import {get} from "react-native/Libraries/TurboModule/TurboModuleRegistry";
 
 const {width: SCREEN_WIDTH, height: SCREEN_HEIGHT} = Dimensions.get("window");
 

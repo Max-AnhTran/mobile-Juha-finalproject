@@ -1,13 +1,17 @@
-import {useState, useEffect, use, act} from "react";
+// 1. Library
+import {useState, useEffect} from "react";
 import {View, Text, Image, TextInput, Pressable, Dimensions, ScrollView, ActivityIndicator} from "react-native";
 import {SafeAreaProvider, SafeAreaView} from "react-native-safe-area-context";
-import styles from "../styles";
 import {LinearGradient} from "expo-linear-gradient";
 import Octicons from "@expo/vector-icons/Octicons";
-import activitiesMock from "../data/activitiesMock";
 import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
-import {saveActivity, getAllActivities, deleteActivity} from "../services/dbService";
 
+// 2. File local
+import styles from "../styles";
+import activitiesMock from "../data/activitiesMock";
+import {getAllActivities, deleteActivity} from "../services/dbService";
+
+// 3. Assets
 import earth from "../assets/earth.png";
 import flags from "../assets/flags.png";
 import img_deco from "../assets/img-deco.png";
