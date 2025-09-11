@@ -10,7 +10,7 @@ const activitiesMock = {
             id: "23642",
             type: "activity",
             name: "Skip-the-line tickets to the Prado Museum",
-            shortDescription:
+            description:
                 "Book your tickets for the Prado Museum in Madrid, discover masterpieces by Velázquez, Goya, Mantegna, Raphael, Tintoretto and access all temporary exhibitions.",
             geoCode: {latitude: "40.414000", longitude: "-3.691000"},
             rating: "4.5",
@@ -23,7 +23,7 @@ const activitiesMock = {
             id: "23643",
             type: "activity",
             name: "Madrid Royal Palace Guided Tour",
-            shortDescription:
+            description:
                 "Enjoy a guided tour of the Royal Palace of Madrid, one of the most beautiful palaces in Europe.",
             geoCode: {latitude: "40.417000", longitude: "-3.714000"},
             rating: "4.7",
@@ -36,7 +36,7 @@ const activitiesMock = {
             id: "23644",
             type: "activity",
             name: "Flamenco Show with Dinner",
-            shortDescription:
+            description:
                 "Experience authentic Spanish culture with a flamenco performance and a traditional dinner.",
             geoCode: {latitude: "40.420000", longitude: "-3.706000"},
             rating: "4.8",
@@ -49,7 +49,7 @@ const activitiesMock = {
             id: "23645",
             type: "activity",
             name: "Retiro Park Bike Tour",
-            shortDescription: "Ride through Madrid’s famous Retiro Park with a local guide.",
+            description: "Ride through Madrid’s famous Retiro Park with a local guide.",
             geoCode: {latitude: "40.415000", longitude: "-3.684000"},
             rating: "4.3",
             pictures: ["https://images.musement.com/cover/0004/21/retiro-park-bike.jpeg?w=500"],
@@ -61,7 +61,7 @@ const activitiesMock = {
             id: "23646",
             type: "activity",
             name: "Santiago Bernabéu Stadium Tour",
-            shortDescription: "Visit the home of Real Madrid CF, including the museum, trophy room and pitch side.",
+            description: "Visit the home of Real Madrid CF, including the museum, trophy room and pitch side.",
             geoCode: {latitude: "40.453000", longitude: "-3.688000"},
             rating: "4.6",
             pictures: ["https://images.musement.com/cover/0005/12/bernabeu-tour.jpeg?w=500"],
@@ -73,7 +73,7 @@ const activitiesMock = {
             id: "23647",
             type: "activity",
             name: "Tapas and Wine Walking Tour",
-            shortDescription: "Discover Madrid’s best tapas bars and taste local wines with an expert guide.",
+            description: "Discover Madrid’s best tapas bars and taste local wines with an expert guide.",
             geoCode: {latitude: "40.416000", longitude: "-3.703000"},
             rating: "4.9",
             pictures: ["https://images.musement.com/cover/0006/18/tapas-tour.jpeg?w=500"],
@@ -85,7 +85,7 @@ const activitiesMock = {
             id: "23648",
             type: "activity",
             name: "Toledo Day Trip from Madrid",
-            shortDescription:
+            description:
                 "Enjoy a full-day guided tour to the historic city of Toledo, a UNESCO World Heritage Site.",
             geoCode: {latitude: "39.862000", longitude: "-4.027000"},
             rating: "4.7",
@@ -98,7 +98,7 @@ const activitiesMock = {
             id: "23649",
             type: "activity",
             name: "Segovia Half-Day Tour",
-            shortDescription: "Visit the beautiful town of Segovia and see its famous Roman aqueduct.",
+            description: "Visit the beautiful town of Segovia and see its famous Roman aqueduct.",
             geoCode: {latitude: "40.950000", longitude: "-4.125000"},
             rating: "4.4",
             pictures: ["https://images.musement.com/cover/0008/19/segovia-tour.jpeg?w=500"],
@@ -110,7 +110,7 @@ const activitiesMock = {
             id: "23650",
             type: "activity",
             name: "Madrid Hop-on Hop-off Bus Tour",
-            shortDescription: "Explore Madrid at your own pace with a hop-on hop-off sightseeing bus ticket.",
+            description: "Explore Madrid at your own pace with a hop-on hop-off sightseeing bus ticket.",
             geoCode: {latitude: "40.420000", longitude: "-3.705000"},
             rating: "4.2",
             pictures: ["https://images.musement.com/cover/0009/25/hop-on-hop-off-madrid.jpeg?w=500"],
@@ -122,7 +122,7 @@ const activitiesMock = {
             id: "23651",
             type: "activity",
             name: "Cooking Class: Paella and Sangria",
-            shortDescription:
+            description:
                 "Learn how to cook Spain’s most famous dish and prepare refreshing sangria with a local chef.",
             geoCode: {latitude: "40.421000", longitude: "-3.699000"},
             rating: "5.0",

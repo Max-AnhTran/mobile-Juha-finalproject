@@ -8,7 +8,6 @@ import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
 
 // 2. File local
 import styles from "../styles";
-import activitiesMock from "../data/activitiesMock";
 import {getAllActivities, deleteActivity} from "../services/dbService";
 
 // 3. Assets
@@ -110,44 +109,26 @@ export default function Home({navigation}) {
         return returnData;
     };
 
-    // const handleSearch = async (inputAddressToGetResults) => {
-    //     try {
-    //         setLoading(true);
-    //         setAddress(inputAddressToGetResults);
-    //         // const {latitude, longitude} = await getLatLngFromAddress(inputAddressToGetResults);
-    //         const {latitude, longitude} = {latitude: 60.200692, longitude: 24.934302};
-    //         const res = await fetch(
-    //             `https://test.api.amadeus.com/v1/shopping/activities?latitude=${latitude}&longitude=${longitude}&radius=1`,
-    //             {
-    //                 method: "GET",
-    //                 headers: {
-    //                     Authorization: `Bearer ${accessToken}`,
-    //                     Accept: "application/json",
-    //                 },
-    //             }
-    //         );
-    //         if (!res.ok) throw new Error(`HTTP ${res.status} ${res.statusText}`);
-    //         const data = await res.json();
-    //         setResults(data.data);
-    //         setTheme({
-    //             backgroundColors: ["#EFF2FF", "#EFF2FF"],
-    //             tagBackgroundColor: "#E4E7FF",
-    //             fontColor: "#2A2929",
-    //         });
-    //         setLoading(false);
-    //     } catch (err) {
-    //         console.error("Fetch error:", err);
-    //     }
-    // };
-
-    const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
     const handleSearch = async (inputAddressToGetResults) => {
         try {
             setLoading(true);
+            setAddress(inputAddressToGetResults);
             setSearchedAddress(inputAddressToGetResults);
-            // const {latitude, longitude} = await getLatLngFromAddress(inputAddressToGetResults);
-            await delay(100);
-            setResults(activitiesMock.data);
+            const {latitude, longitude} = await getLatLngFromAddress(inputAddressToGetResults);
+            // const {latitude, longitude} = {latitude: 60.200692, longitude: 24.934302};
+            const res = await fetch(
+                `https://test.api.amadeus.com/v1/shopping/activities?latitude=${latitude}&longitude=${longitude}&radius=1`,
+                {
+                    method: "GET",
+                    headers: {
+                        Authorization: `Bearer ${accessToken}`,
+                        Accept: "application/json",
+                    },
+                }
+            );
+            if (!res.ok) throw new Error(`HTTP ${res.status} ${res.statusText}`);
+            const data = await res.json();
+            setResults(data.data);
             setTheme({
                 backgroundColors: ["#EFF2FF", "#EFF2FF"],
                 tagBackgroundColor: "#E4E7FF",
@@ -158,6 +139,25 @@ export default function Home({navigation}) {
             console.error("Fetch error:", err);
         }
     };
+
+    // const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+    // const handleSearch = async (inputAddressToGetResults) => {
+    //     try {
+    //         setLoading(true);
+    //         setSearchedAddress(inputAddressToGetResults);
+    //         // const {latitude, longitude} = await getLatLngFromAddress(inputAddressToGetResults);
+    //         await delay(100);
+    //         setResults(activitiesMock.data);
+    //         setTheme({
+    //             backgroundColors: ["#EFF2FF", "#EFF2FF"],
+    //             tagBackgroundColor: "#E4E7FF",
+    //             fontColor: "#2A2929",
+    //         });
+    //         setLoading(false);
+    //     } catch (err) {
+    //         console.error("Fetch error:", err);
+    //     }
+    // };
 
     const handleHome = () => {
         setTheme({
@@ -248,12 +248,11 @@ export default function Home({navigation}) {
                                         activity: {
                                             id: item.id,
                                             name: item.name,
-                                            shortDescription: item.shortDescription,
+                                            description: item.description,
                                             geoCode: {
                                                 latitude: item.latitude,
                                                 longitude: item.longitude,
                                             },
-                                            rating: item.rating,
                                             pictures: [item.pictureLink],
                                             bookingLink: item.bookingLink,
                                             price: {
@@ -261,11 +260,12 @@ export default function Home({navigation}) {
                                                 amount: item.price,
                                             },
                                             location: item.location,
+                                            rating: "5.0",
                                         },
                                     })
                                 }
                             >
-                                <View style={{paddingTop: 10, paddingBottom: 8}}>
+                                <View style={{paddingTop: 10, paddingBottom: 8, maxWidth: "90%"}}>
                                     <Text
                                         style={{
                                             fontFamily: "Roboto_700Bold",
@@ -317,7 +317,7 @@ export default function Home({navigation}) {
                                 name="home-circle"
                                 size={30}
                                 color={theme.fontColor}
-                                style={{paddingVertical: 10, paddingRight: 10}}
+                                style={{padding: 10, marginLeft: -10}}
                             />
                         </Pressable>
                         <Pressable
@@ -330,7 +330,7 @@ export default function Home({navigation}) {
                                 name="feed-heart"
                                 size={24}
                                 color={theme.fontColor}
-                                style={{paddingVertical: 10, paddingLeft: 10}}
+                                style={{padding: 10, marginRight: -10}}
                             />
                         </Pressable>
                     </View>
@@ -355,7 +355,10 @@ export default function Home({navigation}) {
                             onChangeText={(text) => setAddress(text)}
                         />
                         <Pressable
-                            onPress={() => handleSearch(address)}
+                            onPress={() => {
+                                handleSearch(address);
+                                setChosenTag("");
+                            }}
                             style={{
                                 backgroundColor: "#fff",
                                 borderRadius: 10,
@@ -545,7 +548,7 @@ export default function Home({navigation}) {
                                             <Pressable
                                                 onPress={() =>
                                                     navigation.navigate("Activity", {
-                                                        activity: {...result, location: searchedAddress},
+                                                        activity: {...result, location: searchedAddress, rating: "5.0"},
                                                     })
                                                 }
                                                 style={{

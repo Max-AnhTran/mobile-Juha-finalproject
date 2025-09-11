@@ -5,7 +5,7 @@ const db = SQLite.openDatabaseSync("activities.db");
 export const initializeDb = async () => {
     try {
         await db.execAsync(
-            `CREATE TABLE IF NOT EXISTS activities (id TEXT PRIMARY KEY, name TEXT, shortDescription TEXT, latitude TEXT, longitude TEXT, rating TEXT, pictureLink TEXT, bookingLink TEXT, price TEXT, location TEXT);`
+            `CREATE TABLE IF NOT EXISTS activities (id TEXT PRIMARY KEY, name TEXT, description TEXT, latitude TEXT, longitude TEXT, rating TEXT, pictureLink TEXT, bookingLink TEXT, price TEXT, location TEXT);`
         );
         return true;
     } catch (error) {
@@ -16,12 +16,13 @@ export const initializeDb = async () => {
 
 export const saveActivity = async (activity) => {
     try {
+        console.log(activity);
         if (!activity) return;
         await db.runAsync(
-            "INSERT INTO activities (id, name, shortDescription, latitude, longitude, rating, pictureLink, bookingLink, price, location) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?);",
+            "INSERT INTO activities (id, name, description, latitude, longitude, rating, pictureLink, bookingLink, price, location) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?);",
             activity.id,
             activity.name,
-            activity.shortDescription,
+            activity.description,
             activity.geoCode.latitude,
             activity.geoCode.longitude,
             activity.rating,

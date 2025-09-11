@@ -7,6 +7,7 @@ import styles from "../styles";
 import img_deco2 from "../assets/img-deco2.png";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import {saveActivity, deleteActivity, getActivityById} from "../services/dbService";
+import RenderHtml from "react-native-render-html";
 
 const {width: SCREEN_WIDTH, height: SCREEN_HEIGHT} = Dimensions.get("window");
 
@@ -30,6 +31,7 @@ export default function Activity({route, navigation}) {
                 setActive(true);
             }
         };
+        console.log(activity);
         checkActivity();
     }, []);
 
@@ -123,15 +125,19 @@ export default function Activity({route, navigation}) {
                         >
                             <Text style={{color: "#fff", fontSize: 16, fontWeight: "bold"}}>
                                 {activity.rating}
-                                {""}
+                                {" "}
                             </Text>
                             <Octicons name="star-fill" size={16} color="yellow" />
                         </View>
                     </View>
 
-                    <Text style={{color: "#707070", fontSize: 16, fontWeight: "bold", marginTop: 20}}>
-                        {activity.shortDescription}
-                    </Text>
+                    <View style={{marginTop: 20}}>
+                        <RenderHtml
+                            tagsStyles={{p: {color: "#707070", fontSize: 16, fontWeight: "bold"}}}
+                            contentWidth={"100%"}
+                            source={{html: activity.description.replace(/\n/g, "<br />")}}
+                        />
+                    </View>
 
                     <Pressable onPress={() => Linking.openURL(activity.bookingLink)}>
                         <Text
