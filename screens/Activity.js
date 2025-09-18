@@ -76,7 +76,7 @@ export default function Activity({route, navigation}) {
                     <View style={{position: "relative", alignItems: "center"}}>
                         <Image
                             source={{uri: activity.pictures[0]}}
-                            style={{width: SCREEN_WIDTH - 120, height: SCREEN_WIDTH - 120, borderRadius: "50%"}}
+                            style={{width: SCREEN_WIDTH - 120, height: SCREEN_WIDTH - 120, borderRadius: 999}}
                         />
                         <Image
                             source={img_deco2}
@@ -183,7 +183,7 @@ export default function Activity({route, navigation}) {
                                     right: 10,
                                     backgroundColor: "#fff",
                                     padding: 5,
-                                    borderRadius: "50%",
+                                    borderRadius: 999,
                                 }}
                                 name={zoomOut ? "zoom-in-map" : "zoom-out-map"}
                                 size={24}

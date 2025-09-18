@@ -357,7 +357,7 @@ export default function Home({navigation}) {
                         <Pressable
                             onPress={() => {
                                 handleSearch(address);
-                                setChosenTag("");
+                                setChosenTag(address);
                             }}
                             style={{
                                 backgroundColor: "#fff",
