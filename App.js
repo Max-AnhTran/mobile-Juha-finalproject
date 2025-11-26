@@ -15,9 +15,9 @@ import {
 } from "@expo-google-fonts/roboto";
 
 // 3. Local Files
-import Home from "./screens/Home";
-import Activity from "./screens/Activity";
-import {initializeDb} from "./services/dbService";
+import Home from "./src/screens/Home";
+import Activity from "./src/screens/Activity";
+import {initializeDb} from "./src/services/dbService";
 
 SplashScreen.preventAutoHideAsync();
 

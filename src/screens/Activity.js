@@ -3,7 +3,7 @@ import {SafeAreaProvider, SafeAreaView} from "react-native-safe-area-context";
 import MapView, {Marker} from "react-native-maps";
 import {useState, useRef, useEffect} from "react";
 import Octicons from "@expo/vector-icons/Octicons";
-import styles from "../styles";
+import styles from "../styles/commonStyles";
 import img_deco2 from "../assets/img-deco2.png";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import {saveActivity, deleteActivity, getActivityById} from "../services/dbService";
@@ -12,7 +12,6 @@ import RenderHtml from "react-native-render-html";
 const {width: SCREEN_WIDTH, height: SCREEN_HEIGHT} = Dimensions.get("window");
 
 export default function Activity({route, navigation}) {
-    // const apiKey = "68b19790c8a2a153771537jswb4f34d";
     const {activity} = route.params; // Get address from route params
 
     const [active, setActive] = useState(false);
@@ -123,10 +122,7 @@ export default function Activity({route, navigation}) {
                                 padding: 10,
                             }}
                         >
-                            <Text style={{color: "#fff", fontSize: 16, fontWeight: "bold"}}>
-                                {activity.rating}
-                                {" "}
-                            </Text>
+                            <Text style={{color: "#fff", fontSize: 16, fontWeight: "bold"}}>{activity.rating} </Text>
                             <Octicons name="star-fill" size={16} color="yellow" />
                         </View>
                     </View>
