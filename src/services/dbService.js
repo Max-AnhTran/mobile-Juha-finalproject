@@ -4,6 +4,9 @@ const db = SQLite.openDatabaseSync("activities.db");
 
 export const initializeDb = async () => {
     try {
+        // ⚠️ DANGER: This deletes all data! Use only during development.
+        // Uncomment the line below to reset the table structure:
+        // await db.execAsync(`DROP TABLE IF EXISTS activities;`);
         await db.execAsync(
             `CREATE TABLE IF NOT EXISTS activities (id TEXT PRIMARY KEY, name TEXT, description TEXT, latitude TEXT, longitude TEXT, rating TEXT, pictureLink TEXT, bookingLink TEXT, price TEXT, location TEXT);`
         );

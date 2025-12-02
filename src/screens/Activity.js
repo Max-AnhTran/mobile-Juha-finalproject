@@ -1,13 +1,16 @@
-import {View, Text, Pressable, ScrollView, Dimensions, Image, Linking} from "react-native";
+import {View, Text, Pressable, ScrollView, Dimensions, Image, Linking, TouchableOpacity} from "react-native";
 import {SafeAreaProvider, SafeAreaView} from "react-native-safe-area-context";
 import MapView, {Marker} from "react-native-maps";
 import {useState, useRef, useEffect} from "react";
 import Octicons from "@expo/vector-icons/Octicons";
+import {Ionicons} from "@expo/vector-icons";
 import styles from "../styles/commonStyles";
 import img_deco2 from "../assets/img-deco2.png";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import {saveActivity, deleteActivity, getActivityById} from "../services/dbService";
 import RenderHtml from "react-native-render-html";
+import {htmlToText} from "html-to-text";
+import * as Speech from "expo-speech";
 
 const {width: SCREEN_WIDTH, height: SCREEN_HEIGHT} = Dimensions.get("window");
 
@@ -17,10 +20,31 @@ export default function Activity({route, navigation}) {
     const [active, setActive] = useState(false);
     const [zoomOut, setZoomOut] = useState(false);
 
+    const [isSpeaking, setIsSpeaking] = useState(false);
+
     const scrollRef = useRef();
+
+    const html = activity.description;
+
+    const plainText = htmlToText(html, {
+        wordwrap: 130,
+    });
 
     const scrollToBottom = () => {
         scrollRef.current?.scrollToEnd({animated: true});
+    };
+
+    const speak = () => {
+        if (isSpeaking) {
+            Speech.stop();
+            setIsSpeaking(false);
+        } else {
+            Speech.speak(plainText, {
+                onDone: () => setIsSpeaking(false),
+                onStopped: () => setIsSpeaking(false),
+            });
+            setIsSpeaking(true);
+        }
     };
 
     useEffect(() => {
@@ -125,6 +149,41 @@ export default function Activity({route, navigation}) {
                             <Text style={{color: "#fff", fontSize: 16, fontWeight: "bold"}}>{activity.rating} </Text>
                             <Octicons name="star-fill" size={16} color="yellow" />
                         </View>
+                    </View>
+
+                    <View
+                        style={{
+                            marginTop: 20,
+                            alignItems: "center",
+                        }}
+                    >
+                        <TouchableOpacity
+                            style={[
+                                {
+                                    flexDirection: "row",
+                                    alignItems: "center",
+                                    justifyContent: "space-between",
+                                    gap: 10,
+                                    backgroundColor: "#4A90E2",
+                                    paddingVertical: 10,
+                                    paddingHorizontal: 16,
+                                    borderRadius: 12,
+                                    shadowColor: "#000",
+                                    shadowOpacity: 0.2,
+                                    shadowRadius: 4,
+                                    elevation: 5,
+                                },
+                                isSpeaking && {
+                                    backgroundColor: "#E74C3C",
+                                },
+                            ]}
+                            onPress={speak}
+                        >
+                            <Ionicons name={isSpeaking ? "stop" : "play"} size={22} color="#fff" />
+                            <Text style={{color: "#fff", fontSize: 18, fontWeight: "600"}}>
+                                {isSpeaking ? "Stop" : "Play"}
+                            </Text>
+                        </TouchableOpacity>
                     </View>
 
                     <View style={{marginTop: 20}}>
