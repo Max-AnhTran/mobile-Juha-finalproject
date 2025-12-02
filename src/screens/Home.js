@@ -1,12 +1,33 @@
 // 1. Library
 import {useState, useEffect} from "react";
-import {View, Text, Image, Pressable, Dimensions, ScrollView, ActivityIndicator} from "react-native";
+import {View, Image, Dimensions, ScrollView} from "react-native";
 import {SafeAreaProvider, SafeAreaView} from "react-native-safe-area-context";
 import {LinearGradient} from "expo-linear-gradient";
 import Octicons from "@expo/vector-icons/Octicons";
 import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
 import {getLatLngFromAddress} from "../api/geocoding";
 import {searchActivities} from "../api/amadeus";
+import activitiesMock from "../data/activitiesMock";
+import {useAudioPlayer} from "expo-audio";
+
+import Animated, {
+    FadeIn,
+    FadeOut,
+    FadeInDown,
+    FadeInUp,
+    SlideInRight,
+    SlideOutLeft,
+    ZoomIn,
+    ZoomOut,
+    useAnimatedStyle,
+    withTiming,
+    withSpring,
+    useSharedValue,
+    withSequence,
+    interpolate,
+} from "react-native-reanimated";
+
+const audioSource = require("../assets/sound.mp3");
 
 // 2. File local
 import styles from "../styles/commonStyles";
@@ -21,7 +42,12 @@ import {distributeIntoRows} from "../utils/home";
 import earth from "../assets/earth.png";
 import flags from "../assets/flags.png";
 
+// Import React Native Paper components
+import {Text, Button, Chip, Surface, TouchableRipple, ActivityIndicator} from "react-native-paper";
+
 const {width: SCREEN_WIDTH} = Dimensions.get("window");
+
+const AnimatedPressable = Animated.createAnimatedComponent(TouchableRipple);
 
 export default function Home({navigation}) {
     const [active, setActive] = useState(false);
@@ -46,6 +72,11 @@ export default function Home({navigation}) {
 
     const [results, setResults] = useState(null);
 
+    const player = useAudioPlayer(audioSource);
+
+    const earthRotation = useSharedValue(0);
+    const earthScale = useSharedValue(1);
+
     useEffect(() => {
         const unsubscribe = navigation.addListener("focus", () => {
             updateList();
@@ -53,6 +84,12 @@ export default function Home({navigation}) {
 
         return unsubscribe;
     }, [navigation]);
+
+    useEffect(() => {
+        if (!results) {
+            earthRotation.value = withSequence(withTiming(360, {duration: 20000}), withTiming(0, {duration: 0}));
+        }
+    }, [results]);
 
     const updateList = async () => {
         try {
@@ -64,20 +101,13 @@ export default function Home({navigation}) {
         }
     };
 
+    const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
     const handleSearch = async (inputAddressToGetResults) => {
         try {
             setLoading(true);
-            setAddress(inputAddressToGetResults);
             setSearchedAddress(inputAddressToGetResults);
-
-            // 1. Get latitude & longitude from the address
-            const {latitude, longitude} = await getLatLngFromAddress(inputAddressToGetResults);
-
-            // 2. Call Amadeus API to search for activities
-            const activities = await searchActivities(latitude, longitude);
-
-            // 3. Update state with the results and theme
-            setResults(activities);
+            await delay(100);
+            setResults(activitiesMock.data);
             setTheme({
                 backgroundColors: ["#EFF2FF", "#EFF2FF"],
                 tagBackgroundColor: "#E4E7FF",
@@ -87,27 +117,10 @@ export default function Home({navigation}) {
             console.error("Fetch error:", err);
         } finally {
             setLoading(false);
+            player.seekTo(0);
+            player.play();
         }
     };
-
-    // const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
-    // const handleSearch = async (inputAddressToGetResults) => {
-    //     try {
-    //         setLoading(true);
-    //         setSearchedAddress(inputAddressToGetResults);
-    //         // const {latitude, longitude} = await getLatLngFromAddress(inputAddressToGetResults);
-    //         await delay(100);
-    //         setResults(activitiesMock.data);
-    //         setTheme({
-    //             backgroundColors: ["#EFF2FF", "#EFF2FF"],
-    //             tagBackgroundColor: "#E4E7FF",
-    //             fontColor: "#2A2929",
-    //         });
-    //         setLoading(false);
-    //     } catch (err) {
-    //         console.error("Fetch error:", err);
-    //     }
-    // };
 
     const handleHome = () => {
         setTheme({
@@ -122,24 +135,32 @@ export default function Home({navigation}) {
         setChosenTag("");
     };
 
+    const earthAnimatedStyle = useAnimatedStyle(() => {
+        return {
+            transform: [{rotate: `${earthRotation.value}deg`}, {scale: earthScale.value}],
+        };
+    });
+
     return (
         <SafeAreaProvider>
             <SafeAreaView style={styles.safeAreaZone}>
-                <LinearGradient
-                    // Background Linear Gradient
-                    colors={theme.backgroundColors}
-                    style={styles.background}
-                />
-                <Pressable
-                    style={{
-                        display: active ? "flex" : "none",
-                        position: "absolute",
-                        inset: 0,
-                        zIndex: 98,
-                        backgroundColor: "rgba(0, 0, 0, 0.3)",
-                    }}
-                    onPress={() => setActive(false)}
-                ></Pressable>
+                <LinearGradient colors={theme.backgroundColors} style={styles.background} />
+
+                {active && (
+                    <Animated.View entering={FadeIn.duration(200)} exiting={FadeOut.duration(200)}>
+                        {/* Replaced Pressable with TouchableRipple for overlay */}
+                        <TouchableRipple
+                            style={{
+                                position: "absolute",
+                                inset: 0,
+                                zIndex: 98,
+                                backgroundColor: "rgba(0, 0, 0, 0.3)",
+                            }}
+                            onPress={() => setActive(false)}
+                            borderless={false}
+                        />
+                    </Animated.View>
+                )}
 
                 <SavedActivitiesModal
                     active={active}
@@ -150,7 +171,8 @@ export default function Home({navigation}) {
                 />
 
                 <ScrollView overScrollMode="never" bounces={false} style={styles.container}>
-                    <View
+                    <Animated.View
+                        entering={FadeInDown.duration(400).springify()}
                         style={{
                             flexDirection: "row",
                             justifyContent: "space-between",
@@ -158,19 +180,21 @@ export default function Home({navigation}) {
                             width: "100%",
                         }}
                     >
-                        <Pressable onPress={handleHome}>
+                        <AnimatedPressable onPress={handleHome} entering={FadeIn.delay(100)} borderless>
                             <MaterialCommunityIcons
                                 name="home-circle"
                                 size={30}
                                 color={theme.fontColor}
                                 style={{padding: 10, marginLeft: -10}}
                             />
-                        </Pressable>
-                        <Pressable
+                        </AnimatedPressable>
+                        <AnimatedPressable
+                            entering={FadeIn.delay(200)}
                             onPress={() => {
                                 updateList();
                                 setActive(true);
                             }}
+                            borderless
                         >
                             <Octicons
                                 name="feed-heart"
@@ -178,23 +202,39 @@ export default function Home({navigation}) {
                                 color={theme.fontColor}
                                 style={{padding: 10, marginRight: -10}}
                             />
-                        </Pressable>
-                    </View>
-                    <Text style={{fontFamily: "Roboto_500Medium", fontSize: 42, color: theme.fontColor, marginTop: 30}}>
+                        </AnimatedPressable>
+                    </Animated.View>
+
+                    {/* Replaced with Paper Text component for better typography */}
+                    <Animated.Text
+                        entering={FadeInDown.delay(300).springify()}
+                        style={{fontSize: 42, color: theme.fontColor, marginTop: 30}}
+                        variant="displayMedium"
+                    >
                         Discover Your {"\n"}
                         Next Adventure
-                    </Text>
-                    <SearchBar
-                        address={address}
-                        onAddressChange={setAddress}
-                        onSearch={(addr) => {
-                            handleSearch(addr);
-                            setChosenTag(addr);
-                        }}
-                    />
-                    <Text style={{fontFamily: "Roboto_500Medium", fontSize: 26, color: theme.fontColor, marginTop: 35}}>
+                    </Animated.Text>
+
+                    <Animated.View entering={FadeInDown.delay(400).springify()}>
+                        <SearchBar
+                            address={address}
+                            onAddressChange={setAddress}
+                            onSearch={(addr) => {
+                                handleSearch(addr);
+                                setChosenTag(addr);
+                            }}
+                        />
+                    </Animated.View>
+
+                    {/* Replaced with Paper Text component */}
+                    <Animated.Text
+                        entering={FadeInDown.delay(500).springify()}
+                        style={{fontSize: 26, color: theme.fontColor, marginTop: 35}}
+                        variant="headlineSmall"
+                    >
                         Popular Tags
-                    </Text>
+                    </Animated.Text>
+
                     <ScrollView
                         showsHorizontalScrollIndicator={false}
                         horizontal
@@ -213,8 +253,11 @@ export default function Home({navigation}) {
                                     return (
                                         <View key={rowIndex} style={{flexDirection: "row", alignItems: "center"}}>
                                             {rowItems.map((tag, i) => (
-                                                <Pressable
+                                                <AnimatedPressable
                                                     key={`${rowIndex}-${i}`}
+                                                    entering={SlideInRight.delay(
+                                                        (rowIndex * rowItems.length + i) * 50
+                                                    ).springify()}
                                                     onPress={() => {
                                                         handleSearch(tag);
                                                         setChosenTag(tag);
@@ -222,25 +265,26 @@ export default function Home({navigation}) {
                                                     }}
                                                     style={[
                                                         {
-                                                            backgroundColor: theme.tagBackgroundColor,
                                                             borderRadius: 16,
                                                             marginRight: 10,
-                                                            paddingHorizontal: 18,
-                                                            paddingVertical: 10,
                                                         },
                                                     ]}
+                                                    borderless
                                                 >
-                                                    <Text
+                                                    {/* Replaced tag with Paper Chip component */}
+                                                    <Chip
+                                                        mode="flat"
                                                         style={{
-                                                            fontFamily: "Roboto_500Medium",
-                                                            fontSize: 16,
-                                                            textAlign: "center",
+                                                            backgroundColor: theme.tagBackgroundColor,
+                                                        }}
+                                                        textStyle={{
                                                             color: "#000",
+                                                            fontSize: 16,
                                                         }}
                                                     >
                                                         {tag}
-                                                    </Text>
-                                                </Pressable>
+                                                    </Chip>
+                                                </AnimatedPressable>
                                             ))}
                                         </View>
                                     );
@@ -248,56 +292,65 @@ export default function Home({navigation}) {
                             </View>
                         )}
                         {results && (
-                            <View style={{flexDirection: "row", alignItems: "center"}}>
+                            <Animated.View
+                                entering={SlideInRight.springify()}
+                                exiting={SlideOutLeft.springify()}
+                                style={{flexDirection: "row", alignItems: "center"}}
+                            >
                                 {tags.map((tag, i) => (
-                                    <Pressable
+                                    <AnimatedPressable
                                         key={`${i}`}
+                                        entering={SlideInRight.delay(i * 50).springify()}
                                         onPress={() => {
                                             handleSearch(tag);
                                             setChosenTag(tag);
                                         }}
                                         style={[
                                             {
-                                                backgroundColor:
-                                                    chosenTag === tag ? "#8497FE" : theme.tagBackgroundColor,
                                                 borderRadius: 16,
                                                 marginRight: 10,
-                                                paddingHorizontal: 18,
-                                                paddingVertical: 10,
                                             },
                                         ]}
+                                        borderless
                                     >
-                                        <Text
+                                        {/* Replaced tag with Paper Chip component */}
+                                        <Chip
+                                            mode="flat"
                                             style={{
-                                                fontFamily: "Roboto_500Medium",
-                                                fontSize: 16,
-                                                textAlign: "center",
+                                                backgroundColor:
+                                                    chosenTag === tag ? "#8497FE" : theme.tagBackgroundColor,
+                                            }}
+                                            textStyle={{
                                                 color: chosenTag === tag ? "#fff" : "#000",
+                                                fontSize: 16,
                                             }}
                                         >
                                             {tag}
-                                        </Text>
-                                    </Pressable>
+                                        </Chip>
+                                    </AnimatedPressable>
                                 ))}
-                            </View>
+                            </Animated.View>
                         )}
                     </ScrollView>
 
                     {results && (
-                        <View style={{marginTop: 10, flex: 1}}>
-                            <Image
+                        <Animated.View entering={FadeInUp.springify()} style={{marginTop: 10, flex: 1}}>
+                            <Animated.Image
+                                entering={SlideInRight.springify()}
                                 source={flags}
                                 style={{marginLeft: -30, width: SCREEN_WIDTH, resizeMode: "contain"}}
                             />
-                            <Text
+                            {/* Replaced with Paper Text component */}
+                            <Animated.Text
+                                entering={FadeInDown.delay(200).springify()}
                                 style={{
-                                    fontFamily: "Roboto_500Medium",
                                     fontSize: 26,
                                     color: theme.fontColor,
                                 }}
+                                variant="headlineSmall"
                             >
                                 Results
-                            </Text>
+                            </Animated.Text>
 
                             <View style={{flex: 1}}>
                                 <ScrollView
@@ -313,22 +366,25 @@ export default function Home({navigation}) {
                                     contentContainerStyle={{alignItems: "center"}}
                                 >
                                     {results.map((result, i) => (
-                                        <ActivityCard
-                                            key={i}
-                                            result={result}
-                                            navigation={navigation}
-                                            searchedAddress={searchedAddress}
-                                        />
+                                        <Animated.View key={i} entering={SlideInRight.delay(i * 100).springify()}>
+                                            <ActivityCard
+                                                result={result}
+                                                navigation={navigation}
+                                                searchedAddress={searchedAddress}
+                                            />
+                                        </Animated.View>
                                     ))}
                                 </ScrollView>
                             </View>
-                        </View>
+                        </Animated.View>
                     )}
                 </ScrollView>
 
                 {/* Background image */}
                 {!results && (
-                    <View
+                    <Animated.View
+                        entering={ZoomIn.duration(800).springify()}
+                        exiting={ZoomOut.duration(400)}
                         style={{
                             shadowColor: "#fff",
                             shadowOffset: {width: 0, height: 2},
@@ -338,15 +394,19 @@ export default function Home({navigation}) {
                             borderRadius: 10,
                         }}
                     >
-                        <Image source={earth} style={styles.earth} />
-                    </View>
+                        <Animated.Image source={earth} style={[styles.earth, earthAnimatedStyle]} />
+                    </Animated.View>
                 )}
 
-                {/* Loading */}
+                {/* Loading - Replaced ActivityIndicator with Paper's ActivityIndicator */}
                 {loading && (
-                    <View style={styles.loading}>
-                        <ActivityIndicator size="large" color="#EFF2FF" />
-                    </View>
+                    <Animated.View
+                        entering={FadeIn.duration(200)}
+                        exiting={FadeOut.duration(200)}
+                        style={styles.loading}
+                    >
+                        <ActivityIndicator size="large" color="#EFF2FF" animating={true} />
+                    </Animated.View>
                 )}
             </SafeAreaView>
         </SafeAreaProvider>

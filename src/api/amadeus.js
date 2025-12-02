@@ -7,15 +7,16 @@ export const searchActivities = async (latitude, longitude) => {
     const res = await fetch(url, {
         method: "GET",
         headers: {
-            Authorization: `Bearer ${AMADEUS_KEY}`,
+            Authorization: `Bearer csbMeUF99PxYyNQ0lU0nUASKJAtr`,
             Accept: "application/json",
         },
     });
-
+    
     if (!res.ok) {
         throw new Error(`Amadeus API Error: HTTP ${res.status} ${res.statusText}`);
     }
-
+    
+    console.log(url);
     const data = await res.json();
     return data.data;
 };

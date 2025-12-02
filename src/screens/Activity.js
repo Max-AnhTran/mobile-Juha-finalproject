@@ -1,4 +1,4 @@
-import {View, Text, Pressable, ScrollView, Dimensions, Image, Linking, TouchableOpacity} from "react-native";
+import {View, ScrollView, Dimensions, Image, Linking} from "react-native";
 import {SafeAreaProvider, SafeAreaView} from "react-native-safe-area-context";
 import MapView, {Marker} from "react-native-maps";
 import {useState, useRef, useEffect} from "react";
@@ -11,24 +11,80 @@ import {saveActivity, deleteActivity, getActivityById} from "../services/dbServi
 import RenderHtml from "react-native-render-html";
 import {htmlToText} from "html-to-text";
 import * as Speech from "expo-speech";
+import Swiper from "react-native-swiper";
+
+import Animated, {
+    FadeIn,
+    FadeInDown,
+    FadeInUp,
+    SlideInLeft,
+    SlideInRight,
+    ZoomIn,
+    BounceIn,
+    useAnimatedStyle,
+    withSpring,
+    withTiming,
+    useSharedValue,
+    withSequence,
+    withRepeat,
+} from "react-native-reanimated";
+
+// Import React Native Paper components
+import {Button, Chip, Surface, TouchableRipple} from "react-native-paper";
 
 const {width: SCREEN_WIDTH, height: SCREEN_HEIGHT} = Dimensions.get("window");
 
+// Create Animated versions with Paper components
+const AnimatedPressable = Animated.createAnimatedComponent(TouchableRipple);
+const AnimatedTouchableOpacity = Animated.createAnimatedComponent(TouchableRipple);
+
 export default function Activity({route, navigation}) {
-    const {activity} = route.params; // Get address from route params
+    const {activity} = route.params;
 
     const [active, setActive] = useState(false);
     const [zoomOut, setZoomOut] = useState(false);
-
     const [isSpeaking, setIsSpeaking] = useState(false);
 
     const scrollRef = useRef();
 
     const html = activity.description;
-
     const plainText = htmlToText(html, {
         wordwrap: 130,
     });
+
+    // Shared values for animations
+    const heartScale = useSharedValue(1);
+    const playButtonScale = useSharedValue(1);
+    const imageScale = useSharedValue(0.8);
+    const decorationRotation = useSharedValue(0);
+
+    useEffect(() => {
+        // Animate image entrance
+        imageScale.value = withSpring(1, {damping: 10});
+
+        // Rotate decoration continuously
+        decorationRotation.value = withRepeat(withTiming(360, {duration: 20000}), -1, false);
+    }, []);
+
+    // Animate heart when toggled
+    useEffect(() => {
+        if (active) {
+            heartScale.value = withSequence(withSpring(1.3, {damping: 5}), withSpring(1, {damping: 10}));
+        }
+    }, [active]);
+
+    // Animate play button when speaking
+    useEffect(() => {
+        if (isSpeaking) {
+            playButtonScale.value = withRepeat(
+                withSequence(withTiming(1.05, {duration: 500}), withTiming(1, {duration: 500})),
+                -1,
+                true
+            );
+        } else {
+            playButtonScale.value = withSpring(1);
+        }
+    }, [isSpeaking]);
 
     const scrollToBottom = () => {
         scrollRef.current?.scrollToEnd({animated: true});
@@ -73,49 +129,95 @@ export default function Activity({route, navigation}) {
         setActive(!active);
     };
 
+    // Animated styles
+    const heartAnimatedStyle = useAnimatedStyle(() => ({
+        transform: [{scale: heartScale.value}],
+    }));
+
+    const playButtonAnimatedStyle = useAnimatedStyle(() => ({
+        transform: [{scale: playButtonScale.value}],
+    }));
+
+    const imageAnimatedStyle = useAnimatedStyle(() => ({
+        transform: [{scale: imageScale.value}],
+    }));
+
+    const decorationAnimatedStyle = useAnimatedStyle(() => ({
+        transform: [{rotate: `${decorationRotation.value}deg`}],
+    }));
+
     return (
         <SafeAreaProvider>
             <SafeAreaView style={{...styles.safeAreaZone, backgroundColor: "#EFF2FF"}}>
                 <ScrollView ref={scrollRef} overScrollMode="never" bounces={false} style={styles.container}>
-                    <View style={{flexDirection: "row", justifyContent: "space-between", width: "100%"}}>
-                        <Pressable onPress={() => navigation.goBack()}>
+                    <Animated.View
+                        entering={FadeInDown.duration(300).springify()}
+                        style={{flexDirection: "row", justifyContent: "space-between", width: "100%"}}
+                    >
+                        <AnimatedPressable
+                            entering={SlideInLeft.springify()}
+                            onPress={() => navigation.goBack()}
+                            borderless
+                        >
                             <Octicons
                                 name="chevron-left"
                                 size={24}
                                 color="black"
                                 style={{paddingVertical: 10, paddingRight: 10}}
                             />
-                        </Pressable>
-                        <Pressable onPress={saveAndDelete}>
+                        </AnimatedPressable>
+                        <AnimatedPressable
+                            entering={SlideInRight.springify()}
+                            onPress={saveAndDelete}
+                            style={heartAnimatedStyle}
+                            borderless
+                        >
                             <Octicons
                                 name={active ? "heart-fill" : "heart"}
                                 size={24}
                                 color={active ? "red" : "black"}
                                 style={{paddingVertical: 10, paddingLeft: 10}}
                             />
-                        </Pressable>
-                    </View>
+                        </AnimatedPressable>
+                    </Animated.View>
 
-                    <View style={{position: "relative", alignItems: "center"}}>
-                        <Image
+                    <Animated.View
+                        entering={ZoomIn.duration(600).springify()}
+                        style={{position: "relative", alignItems: "center"}}
+                    >
+                        <Animated.Image
                             source={{uri: activity.pictures[0]}}
-                            style={{width: SCREEN_WIDTH - 120, height: SCREEN_WIDTH - 120, borderRadius: 999}}
+                            style={[
+                                {width: SCREEN_WIDTH - 120, height: SCREEN_WIDTH - 120, borderRadius: 999},
+                                imageAnimatedStyle,
+                            ]}
                         />
-                        <Image
+                        <Animated.Image
                             source={img_deco2}
-                            style={{
-                                width: SCREEN_WIDTH - 80,
-                                height: SCREEN_WIDTH - 80,
-                                position: "absolute",
-                                top: -20,
-                                left: SCREEN_WIDTH / 2 - 30 - (SCREEN_WIDTH - 80) / 2,
-                            }}
+                            style={[
+                                {
+                                    width: SCREEN_WIDTH - 80,
+                                    height: SCREEN_WIDTH - 80,
+                                    position: "absolute",
+                                    top: -20,
+                                    left: SCREEN_WIDTH / 2 - 30 - (SCREEN_WIDTH - 80) / 2,
+                                },
+                                decorationAnimatedStyle,
+                            ]}
                         />
-                    </View>
-                    <Text style={{fontSize: 32, fontFamily: "Roboto_700Bold", marginTop: 20, textAlign: "center"}}>
+                    </Animated.View>
+
+                    {/* Replaced with Paper Text component */}
+                    <Animated.Text
+                        entering={FadeInUp.delay(400).springify()}
+                        style={{fontSize: 32, marginTop: 20, textAlign: "center"}}
+                        variant="headlineMedium"
+                    >
                         {activity.name}
-                    </Text>
-                    <View
+                    </Animated.Text>
+
+                    <Animated.View
+                        entering={FadeInUp.delay(500).springify()}
                         style={{
                             flexDirection: "row",
                             alignItems: "center",
@@ -123,146 +225,149 @@ export default function Activity({route, navigation}) {
                             marginTop: 20,
                         }}
                     >
-                        <Text
-                            style={{
-                                color: "#fff",
-                                fontSize: 16,
-                                fontWeight: "bold",
-                                backgroundColor: "#8497FE",
-                                borderRadius: 16,
-                                marginRight: 10,
-                                padding: 10,
-                            }}
-                        >
-                            € {activity.price.amount}
-                        </Text>
-                        <View
-                            style={{
-                                flexDirection: "row",
-                                alignItems: "center",
-                                backgroundColor: "#8497FE",
-                                borderRadius: 16,
-                                marginRight: 10,
-                                padding: 10,
-                            }}
-                        >
-                            <Text style={{color: "#fff", fontSize: 16, fontWeight: "bold"}}>{activity.rating} </Text>
-                            <Octicons name="star-fill" size={16} color="yellow" />
-                        </View>
-                    </View>
+                        {/* Replaced price display with Paper Chip */}
+                        <Animated.View entering={SlideInLeft.delay(600).springify()}>
+                            <Chip
+                                mode="flat"
+                                style={{
+                                    backgroundColor: "#8497FE",
+                                    marginRight: 10,
+                                }}
+                                textStyle={{color: "#fff", fontWeight: "bold"}}
+                            >
+                                € {activity.price.amount}
+                            </Chip>
+                        </Animated.View>
 
-                    <View
+                        {/* Replaced rating display with Paper Chip */}
+                        <Animated.View entering={SlideInRight.delay(600).springify()}>
+                            <Chip
+                                mode="flat"
+                                style={{
+                                    backgroundColor: "#8497FE",
+                                    marginRight: 10,
+                                }}
+                                icon={() => <Octicons name="star-fill" size={16} color="yellow" />}
+                                textStyle={{color: "#fff", fontWeight: "bold"}}
+                            >
+                                {activity.rating}
+                            </Chip>
+                        </Animated.View>
+                    </Animated.View>
+
+                    <Animated.View
+                        entering={BounceIn.delay(700)}
                         style={{
                             marginTop: 20,
                             alignItems: "center",
                         }}
                     >
-                        <TouchableOpacity
-                            style={[
-                                {
-                                    flexDirection: "row",
-                                    alignItems: "center",
-                                    justifyContent: "space-between",
-                                    gap: 10,
-                                    backgroundColor: "#4A90E2",
-                                    paddingVertical: 10,
-                                    paddingHorizontal: 16,
+                        {/* Replaced play button with Paper Button */}
+                        <Animated.View style={playButtonAnimatedStyle}>
+                            <Button
+                                mode="contained"
+                                onPress={speak}
+                                icon={() => <Ionicons name={isSpeaking ? "stop" : "play"} size={22} color="#fff" />}
+                                style={{
+                                    backgroundColor: isSpeaking ? "#E74C3C" : "#4A90E2",
                                     borderRadius: 12,
-                                    shadowColor: "#000",
-                                    shadowOpacity: 0.2,
-                                    shadowRadius: 4,
-                                    elevation: 5,
-                                },
-                                isSpeaking && {
-                                    backgroundColor: "#E74C3C",
-                                },
-                            ]}
-                            onPress={speak}
-                        >
-                            <Ionicons name={isSpeaking ? "stop" : "play"} size={22} color="#fff" />
-                            <Text style={{color: "#fff", fontSize: 18, fontWeight: "600"}}>
+                                    paddingHorizontal: 16,
+                                }}
+                                contentStyle={{flexDirection: "row-reverse"}}
+                                labelStyle={{color: "#fff", fontSize: 18, fontWeight: "600"}}
+                            >
                                 {isSpeaking ? "Stop" : "Play"}
-                            </Text>
-                        </TouchableOpacity>
-                    </View>
+                            </Button>
+                        </Animated.View>
+                    </Animated.View>
 
-                    <View style={{marginTop: 20}}>
+                    <Animated.View entering={FadeInUp.delay(800).springify()} style={{marginTop: 20}}>
                         <RenderHtml
                             tagsStyles={{p: {color: "#707070", fontSize: 16, fontWeight: "bold"}}}
                             contentWidth={"100%"}
                             source={{html: activity.description.replace(/\n/g, "<br />")}}
                         />
-                    </View>
+                    </Animated.View>
 
-                    <Pressable onPress={() => Linking.openURL(activity.bookingLink)}>
-                        <Text
-                            style={{
-                                color: "#8497FE",
-                                fontSize: 16,
-                                fontFamily: "Roboto_700Bold",
-                                marginTop: 12,
-                                textDecorationLine: "underline",
-                                paddingVertical: 5,
-                            }}
+                    {/* Replaced booking link with Paper Button in text mode */}
+                    <Animated.View entering={FadeIn.delay(900)} style={{marginTop: 12}}>
+                        <Button
+                            mode="text"
+                            onPress={() => Linking.openURL(activity.bookingLink)}
+                            textColor="#8497FE"
+                            style={{paddingVertical: 5}}
+                            labelStyle={{fontSize: 16, textDecorationLine: "underline"}}
                         >
                             Click to book this activity
-                        </Text>
-                    </Pressable>
+                        </Button>
+                    </Animated.View>
 
-                    <MapView
-                        style={{
-                            position: "relative",
-                            width: SCREEN_WIDTH - 60,
-                            height: zoomOut ? SCREEN_HEIGHT * 0.8 : SCREEN_WIDTH - 60,
-                            borderRadius: 20,
-                            marginTop: 20,
-                        }}
-                        region={{
-                            latitude: activity.geoCode.latitude,
-                            longitude: activity.geoCode.longitude,
-                            latitudeDelta: 0.0322,
-                            longitudeDelta: 0.0221,
-                        }}
-                    >
-                        <Marker
-                            coordinate={{
-                                latitude: activity.geoCode.latitude,
-                                longitude: activity.geoCode.longitude,
-                            }}
-                        />
-                        <Pressable onPress={() => setZoomOut(!zoomOut)}>
-                            <MaterialIcons
+                    <Animated.View entering={FadeIn.delay(900)} style={{marginTop: 12, maxHeight: 250}}>
+                        <Swiper showsPagination autoplay>
+                            {activity.pictures.map((img, index) => (
+                                <Image key={index} source={{uri: img}} style={{width: "100%", height: 250}} />
+                            ))}
+                        </Swiper>
+                    </Animated.View>
+
+                    <Animated.View entering={FadeInUp.delay(1000).springify()}>
+                        <Surface style={{borderRadius: 20, overflow: "hidden", marginTop: 20}}>
+                            <MapView
                                 style={{
-                                    position: "absolute",
-                                    top: 10,
-                                    right: 10,
-                                    backgroundColor: "#fff",
-                                    padding: 5,
-                                    borderRadius: 999,
+                                    width: SCREEN_WIDTH - 60,
+                                    height: zoomOut ? SCREEN_HEIGHT * 0.8 : SCREEN_WIDTH - 60,
                                 }}
-                                name={zoomOut ? "zoom-in-map" : "zoom-out-map"}
-                                size={24}
-                                color="black"
-                            />
-                        </Pressable>
-                    </MapView>
+                                region={{
+                                    latitude: activity.geoCode.latitude,
+                                    longitude: activity.geoCode.longitude,
+                                    latitudeDelta: 0.0322,
+                                    longitudeDelta: 0.0221,
+                                }}
+                            >
+                                <Marker
+                                    coordinate={{
+                                        latitude: activity.geoCode.latitude,
+                                        longitude: activity.geoCode.longitude,
+                                    }}
+                                />
+                                <AnimatedPressable
+                                    entering={ZoomIn.delay(1200)}
+                                    onPress={() => setZoomOut(!zoomOut)}
+                                    borderless
+                                >
+                                    <MaterialIcons
+                                        style={{
+                                            position: "absolute",
+                                            top: 10,
+                                            right: 10,
+                                            backgroundColor: "#fff",
+                                            padding: 5,
+                                            borderRadius: 999,
+                                        }}
+                                        name={zoomOut ? "zoom-in-map" : "zoom-out-map"}
+                                        size={24}
+                                        color="black"
+                                    />
+                                </AnimatedPressable>
+                            </MapView>
+                        </Surface>
+                    </Animated.View>
 
-                    <Pressable onPress={saveAndDelete}>
-                        <Text
+                    {/* Replaced favorite button with Paper Button */}
+                    <Animated.View entering={BounceIn.delay(1100)} style={{marginTop: 15}}>
+                        <Button
+                            mode="contained"
+                            onPress={saveAndDelete}
                             style={{
-                                color: "#fff",
-                                fontSize: 16,
-                                fontFamily: "Roboto_700Bold",
-                                marginTop: 15,
-                                paddingVertical: 20,
                                 backgroundColor: active ? "red" : "#8497FE",
                                 borderRadius: 20,
-                                textAlign: "center",
+                                paddingVertical: 10,
                             }}
+                            labelStyle={{fontSize: 16, fontWeight: "bold"}}
                         >
                             {active ? "Remove from Favorites" : "+ Add to Favorites"}
-                        </Text>
-                    </Pressable>
+                        </Button>
+                    </Animated.View>
 
                     <View style={{height: 10}}></View>
                 </ScrollView>

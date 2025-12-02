@@ -19,11 +19,10 @@
       },
       "edgeToEdgeEnabled": true
     },
-
     "plugins": [
       "expo-font",
-      "expo-sqlite"
+      "expo-sqlite",
+      "expo-audio"
     ]
   }
 }
-
