@@ -302,7 +302,7 @@ export default function Activity({route, navigation}) {
                         </Button>
                     </Animated.View>
 
-                    <Animated.View entering={FadeIn.delay(900)} style={{marginTop: 12, maxHeight: 250}}>
+                    <Animated.View entering={FadeIn.delay(900)} style={{marginTop: 12, height: 250}}>
                         <Swiper showsPagination autoplay>
                             {activity.pictures.map((img, index) => (
                                 <Image key={index} source={{uri: img}} style={{width: "100%", height: 250}} />
