@@ -2,7 +2,7 @@ import {useEffect, useState} from "react";
 import {NavigationContainer} from "@react-navigation/native";
 import {createNativeStackNavigator} from "@react-navigation/native-stack";
 import * as SplashScreen from "expo-splash-screen";
-import {View, Image, Text, StyleSheet} from "react-native";
+import {View, Image, Text, StyleSheet, ActivityIndicator} from "react-native";
 import AppIntroSlider from "react-native-app-intro-slider";
 
 import {
@@ -16,7 +16,11 @@ import {
 
 import Home from "./src/screens/Home";
 import Activity from "./src/screens/Activity";
+import Login from "./src/screens/Login";
+import SignUp from "./src/screens/SignUp";
+import ForgotPassword from "./src/screens/ForgotPassword";
 import {initializeDb} from "./src/services/dbService";
+import {AuthProvider, useAuth} from "./src/context/AuthContext";
 
 SplashScreen.preventAutoHideAsync();
 
@@ -46,8 +50,10 @@ const slides = [
     },
 ];
 
-export default function App() {
+function AppNavigator() {
+    const {user, loading: authLoading} = useAuth();
     const [showRealApp, setShowRealApp] = useState(false);
+    const [showIntro, setShowIntro] = useState(true);
 
     const [loaded, error] = useFonts({
         Roboto_400Regular,
@@ -66,10 +72,10 @@ export default function App() {
     }, []);
 
     useEffect(() => {
-        if ((loaded || error) && dbReady) {
+        if ((loaded || error) && dbReady && !authLoading) {
             SplashScreen.hideAsync();
         }
-    }, [loaded, error, dbReady]);
+    }, [loaded, error, dbReady, authLoading]);
 
     const _renderItem = ({item}) => {
         return (
@@ -82,6 +88,7 @@ export default function App() {
     };
 
     const _onDone = () => {
+        setShowIntro(false);
         setShowRealApp(true);
     };
 
@@ -101,11 +108,17 @@ export default function App() {
         );
     };
 
-    if ((!loaded && !error) || !dbReady) {
-        return null;
+    // Show loading indicator while checking auth state
+    if ((!loaded && !error) || !dbReady || authLoading) {
+        return (
+            <View style={{flex: 1, justifyContent: "center", alignItems: "center"}}>
+                <ActivityIndicator size="large" color="#8898FC" />
+            </View>
+        );
     }
 
-    if (!showRealApp) {
+    // Show intro slides only for first-time users
+    if (showIntro && !user) {
         return (
             <AppIntroSlider
                 renderItem={_renderItem}
@@ -124,11 +137,31 @@ export default function App() {
 
     return (
         <NavigationContainer>
-            <Stack.Navigator>
-                <Stack.Screen name="Home" component={Home} options={{headerShown: false}} />
-                <Stack.Screen name="Activity" component={Activity} options={{headerShown: false}} />
+            <Stack.Navigator screenOptions={{headerShown: false}}>
+                {user ? (
+                    // User is signed in
+                    <>
+                        <Stack.Screen name="Home" component={Home} />
+                        <Stack.Screen name="Activity" component={Activity} />
+                    </>
+                ) : (
+                    // User is not signed in
+                    <>
+                        <Stack.Screen name="Login" component={Login} />
+                        <Stack.Screen name="SignUp" component={SignUp} />
+                        <Stack.Screen name="ForgotPassword" component={ForgotPassword} />
+                    </>
+                )}
             </Stack.Navigator>
         </NavigationContainer>
+    );
+}
+
+export default function App() {
+    return (
+        <AuthProvider>
+            <AppNavigator />
+        </AuthProvider>
     );
 }
 

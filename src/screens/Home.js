@@ -9,6 +9,8 @@ import {getLatLngFromAddress} from "../api/geocoding";
 import {searchActivities} from "../api/amadeus";
 import activitiesMock from "../data/activitiesMock";
 import {useAudioPlayer} from "expo-audio";
+import {useAuth} from "../context/AuthContext";
+import {Alert} from "react-native";
 
 import Animated, {
     FadeIn,
@@ -50,6 +52,7 @@ const {width: SCREEN_WIDTH} = Dimensions.get("window");
 const AnimatedPressable = Animated.createAnimatedComponent(TouchableRipple);
 
 export default function Home({navigation}) {
+    const {user, logOut} = useAuth();
     const [active, setActive] = useState(false);
 
     const rowsData = distributeIntoRows(popularTags);
@@ -102,6 +105,26 @@ export default function Home({navigation}) {
     };
 
     const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
+    const handleLogout = () => {
+        Alert.alert("Logout", "Are you sure you want to logout?", [
+            {
+                text: "Cancel",
+                style: "cancel",
+            },
+            {
+                text: "Logout",
+                onPress: async () => {
+                    try {
+                        await logOut();
+                    } catch (error) {
+                        Alert.alert("Error", "Failed to logout");
+                    }
+                },
+                style: "destructive",
+            },
+        ]);
+    };
     const handleSearch = async (inputAddressToGetResults) => {
         try {
             setLoading(true);
@@ -188,21 +211,42 @@ export default function Home({navigation}) {
                                 style={{padding: 10, marginLeft: -10}}
                             />
                         </AnimatedPressable>
-                        <AnimatedPressable
-                            entering={FadeIn.delay(200)}
-                            onPress={() => {
-                                updateList();
-                                setActive(true);
-                            }}
-                            borderless
-                        >
-                            <Octicons
-                                name="feed-heart"
-                                size={24}
-                                color={theme.fontColor}
-                                style={{padding: 10, marginRight: -10}}
-                            />
-                        </AnimatedPressable>
+
+                        <View style={{flexDirection: "row", alignItems: "center"}}>
+                            {user?.displayName && (
+                                <Text
+                                    style={{
+                                        color: theme.fontColor,
+                                        marginRight: 10,
+                                        fontSize: 14,
+                                        fontFamily: "Roboto_500Medium",
+                                    }}
+                                >
+                                    {user.displayName}
+                                </Text>
+                            )}
+
+                            <AnimatedPressable
+                                entering={FadeIn.delay(200)}
+                                onPress={() => {
+                                    updateList();
+                                    setActive(true);
+                                }}
+                                borderless
+                            >
+                                <Octicons name="feed-heart" size={24} color={theme.fontColor} style={{padding: 10}} />
+                            </AnimatedPressable>
+
+                            {/* Logout button */}
+                            <AnimatedPressable entering={FadeIn.delay(300)} onPress={handleLogout} borderless>
+                                <MaterialCommunityIcons
+                                    name="logout"
+                                    size={24}
+                                    color={theme.fontColor}
+                                    style={{padding: 10, marginRight: -10}}
+                                />
+                            </AnimatedPressable>
+                        </View>
                     </Animated.View>
 
                     {/* Replaced with Paper Text component for better typography */}
